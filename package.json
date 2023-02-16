@@ -308,6 +308,12 @@
                     "type": "string",
                     "description": "Prefix command before run (e.g: valgrind ./foobar)",
                     "scope": "resource"
+                },
+                "c-cpp-compile-run.show-execution-time": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether should show execution time after run",
+                    "scope": "resource"
                 }
             }
         }

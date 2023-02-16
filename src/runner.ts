@@ -46,12 +46,12 @@ export class Runner {
 
         const runCommand = this.getRunCommand(parsedExecutable, args, customPrefix, shell);
 
-        if (shouldRunInExternalTerminal === true && isWsl === true){
+        if (shouldRunInExternalTerminal === true && isWsl === true) {
             Notification.showWarningMessage("Wsl detected, running in vscode terminal!");
 
             shouldRunInExternalTerminal = false;
         }
-        
+
         if (shouldRunInExternalTerminal) {
             await externalTerminal.runInExternalTerminal(runCommand, outputLocation, shell);
         }
@@ -62,12 +62,26 @@ export class Runner {
 
     getRunCommand(executable: string, args: string, customPrefix: string, shell: ShellType) {
         const prefix = getRunPrefix(shell);
+        const showExecutionTime = Configuration.showExecutionTime();
 
+        let command = `${prefix}${executable} ${args}`.trim();
         if (customPrefix) {
-            return [customPrefix, " ", prefix, executable, " ", args].join("").trim();
+            command = `${customPrefix} ${command}`;
         }
 
-        return [prefix, executable, " ", args].join("").trim();
+        if (!showExecutionTime) {
+            return command;
+        }
+
+        if (process.platform === "linux" || process.platform === "darwin") {
+            return `TIMEFMT='%J (elapsed time: %E)';time ${command}`;
+        }
+
+        if (process.platform === "win32" && shell === ShellType.powerShell) {
+            return `Measure-Command {${command}} | select @{n='Execution time:';e={$_.Minutes,'Minutes',$_.Seconds,'Seconds',$_.Milliseconds,'Milliseconds' -join ' '}}`;
+        }
+
+        return command;
     }
 
     getShell(runInExternalTerminal: boolean): ShellType {
